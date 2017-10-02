@@ -10,6 +10,7 @@ typedef struct node{
     struct node *l,*r;
 }node;
 typedef node* pnode;
+
 int sz(pnode t){
     return t?t->size:0;
 }
@@ -40,12 +41,14 @@ void lazy(pnode t){
 }
 
 void reset(pnode t){
-    if(t)t->sum = t->val;//no need to reset lazy coz when we call this lazy would itself be propagated
+    if(t)t->sum = t->val;
 }
+
 void combine(pnode& t,pnode l,pnode r){//combining two ranges of segtree
     if(!l || !r)return void(t = l?l:r);
     t->sum = l->sum + r->sum;
 }
+
 void operation(pnode t){//operation of segtree
     if(!t)return;
     reset(t);//reset the value of current node assuming it now represents a single element of the array
@@ -53,6 +56,7 @@ void operation(pnode t){//operation of segtree
     combine(t,t->l,t);
     combine(t,t,t->r);
 }
+
 void split(pnode t,pnode &l,pnode &r,int pos,int add=0){
     if(!t)return void(l=r=NULL);
     lazy(t);
@@ -64,6 +68,7 @@ void split(pnode t,pnode &l,pnode &r,int pos,int add=0){
     fix_node(t);
     operation(t);
 }
+
 void merge(pnode &t,pnode l,pnode r){ //l->leftarray,r->rightarray,t->resulting array
     lazy(l);lazy(r);
     if(!l || !r) t = l?l:r;
