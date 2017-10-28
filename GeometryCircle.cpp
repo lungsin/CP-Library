@@ -74,7 +74,7 @@ double commonCircleArea(Circle c1, Circle c2) { //return the common area of two 
     else if (c2.r+d <= c1.r) area = (c1.r * c1.r - c2.r * c2.r) * M_PI;
     else if (c1.r+d <= c2.r) area = (c2.r * c2.r - c1.r * c1.r) * M_PI;
     else {
-        double p1 = c2.r * c2.r * acos( (d*d + c2.r*c2.r = c1.r*c1.r) / (2*d*c2.r));
+        double p1 = c2.r * c2.r * acos( (d*d + c2.r*c2.r - c1.r*c1.r) / (2*d*c2.r));
         double p2 = c1.r * c1.r * acos((d*d + c1.r*c1.r - c2.r*c2.r) / (2*d*c1.r));
         double p3 = 0.5 * sqrt((-d+c2.r+c1.r) * (d+c2.r-c1.r) * (d+c1.r-c2.r) * (d+c1.r+c2.r));
         area = p1 + p2 - p3;
