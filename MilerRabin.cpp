@@ -4,57 +4,42 @@
 
 #include <stdlib.h>
 
-typedef long long LL;
+#include<bits/stdc++.h>
+using namespace std;
+#define LL long long
+#define f first
+#define s second
+#define mp make_pair
 
-LL ModularMultiplication(LL a, LL b, LL m)
-{
-	LL ret=0, c=a;
-	while(b)
-	{
-		if(b&1) ret=(ret+c)%m;
-		b>>=1; c=(c+c)%m;
-	}
-	return ret;
+vector<LL> A; // store prime from 2..23 (there are 9 prime)
+// if n < 3,825,123,056,546,413,051 (3*10^18), it is enough to test a = 2, 3, 5, 7, 11, 13, 17, 19, and 23.
+inline LL fastmul(LL a, LL b, LL n) {
+    LL ret = 0;
+    while (b) {
+        if (b & 1) ret = (ret + a) % n;
+        a = (a + a) % n;
+        b >>= 1;
+    }
+    return ret;
 }
-LL ModularExponentiation(LL a, LL n, LL m)
-{
-	LL ret=1, c=a;
-	while(n)
-	{
-		if(n&1) ret=ModularMultiplication(ret, c, m);
-		n>>=1; c=ModularMultiplication(c, c, m);
-	}
-	return ret;
+
+inline LL fastexp(LL a, LL b, LL n) {//compute (a^b) mod n
+    LL ret = 1;
+    while (b) {
+        if (b & 1) ret = fastmul(ret, a, n);
+		a = fastmul(a, a, n);
+        b >>= 1;
+    }
+    return ret;
 }
-bool Witness(LL a, LL n)
-{
-	LL u=n-1;
-  int t=0;
-	while(!(u&1)){u>>=1; t++;}
-	LL x0=ModularExponentiation(a, u, n), x1;
-	for(int i=1;i<=t;i++)
-	{
-		x1=ModularMultiplication(x0, x0, n);
-		if(x1==1 && x0!=1 && x0!=n-1) return true;
-		x0=x1;
+
+bool miller_test(LL n, LL s, LL d, LL a) {
+	LL as = fastexp(a, s, n); //as = a^s mod n
+	if(as == 1 || as == n-1) return true;
+	for(int r = 1; r <= d-1; r++) {
+		as = fastmul(as, as, n); // as = as^2 mod n
+		if (as == 1) return false;
+		if (as == n-1) return true;
 	}
-	if(x0!=1) return true;
 	return false;
-}
-LL Random(LL n)
-{
-  LL ret=rand(); ret*=32768;
-	ret+=rand(); ret*=32768;
-	ret+=rand(); ret*=32768;
-	ret+=rand();
-  return ret%n;
-}
-bool IsPrimeFast(LL n, int TRIAL)
-{
-  while(TRIAL--)
-  {
-    LL a=Random(n-2)+1;
-    if(Witness(a, n)) return false;
-  }
-  return true;
 }
