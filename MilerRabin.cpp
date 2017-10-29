@@ -43,3 +43,22 @@ bool miller_test(LL n, LL s, LL d, LL a) {
 	}
 	return false;
 }
+
+inline bool is_prime(LL n) {
+	if(n == 2) return true;
+    if(n == 1 || (n % 2 == 0)) return false;
+    LL s = n-1, d = 0;
+    while(s % 2 == 0) {
+		d++, s /= 2;
+    }
+	int idx;
+	if (n <= 1000000) idx = 5;
+	else if (n <= 100000000) idx = 7;
+	else idx = 9;
+    for(int j = 0; j < idx; j++) {
+		if (A[j] >= n) break;
+		if (!miller_test(n, s, d, A[j])) 
+			return false;
+    }
+    return true;
+}
