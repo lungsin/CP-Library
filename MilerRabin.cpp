@@ -3,7 +3,6 @@
 //   Almost constant time. srand is needed
 
 #include <stdlib.h>
-#define EPS 1e-7
 
 typedef long long LL;
 

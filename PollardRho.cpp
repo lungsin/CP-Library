@@ -1,81 +1,186 @@
-/* C++ program to find a prime factor of composite using
-   Pollard's Rho algorithm */
 #include<bits/stdc++.h>
 using namespace std;
- 
-/* Function to calculate (base^exponent)%modulus */
-long long int modular_pow(long long int base, int exponent,
-                          long long int modulus)
-{
-    /* initialize result */
-    long long int result = 1;
- 
-    while (exponent > 0)
-    {
-        /* if y is odd, multiply base with result */
-        if (exponent & 1)
-            result = (result * base) % modulus;
- 
-        /* exponent = exponent/2 */
-        exponent = exponent >> 1;
- 
-        /* base = base * base */
-        base = (base * base) % modulus;
+#define LL long long
+#define f first
+#define s second
+#define mp make_pair
+
+vector<LL> A; // store prime from 2..23 (there are 9 prime)
+// if n < 3,825,123,056,546,413,051 (3*10^18), it is enough to test a = 2, 3, 5, 7, 11, 13, 17, 19, and 23.
+inline LL fastmul(LL a, LL b, LL n) {
+    LL ret = 0;
+    while (b) {
+        if (b & 1) ret = (ret + a) % n;
+        a = (a + a) % n;
+        b >>= 1;
     }
-    return result;
+    return ret;
 }
- 
-/* method to return prime divisor for n */
-long long int PollardRho(long long int n)
-{
-    /* initialize random seed */
-    srand (time(NULL));
- 
-    /* no prime divisor for 1 */
-    if (n==1) return n;
- 
-    /* even number means one of the divisors is 2 */
-    if (n % 2 == 0) return 2;
- 
-    /* we will pick from the range [2, N) */
-    long long int x = (rand()%(n-2))+2;
-    long long int y = x;
- 
-    /* the constant in f(x).
-     * Algorithm can be re-run with a different c
-     * if it throws failure for a composite. */
-    long long int c = (rand()%(n-1))+1;
- 
-    /* Initialize candidate divisor (or result) */
-    long long int d = 1;  
- 
-    /* until the prime factor isn't obtained.
-       If n is prime, return n */
-    while (d==1)
-    {
-        /* Tortoise Move: x(i+1) = f(x(i)) */
-        x = (modular_pow(x, 2, n) + c + n)%n;
- 
-        /* Hare Move: y(i+1) = f(f(y(i))) */
-        y = (modular_pow(y, 2, n) + c + n)%n;
-        y = (modular_pow(y, 2, n) + c + n)%n;
- 
-        /* check gcd of |x-y| and n */
-        d = __gcd(abs(x-y), n);
- 
-        /* retry if the algorithm fails to find prime factor
-         * with chosen x and c */
-        if (d==n) return PollardRho(n);
+
+inline LL fastexp(LL a, LL b, LL n) {//compute (a^b) mod n
+    LL ret = 1;
+    while (b) {
+        if (b & 1) ret = fastmul(ret, a, n);
+		a = fastmul(a, a, n);
+        b >>= 1;
     }
- 
-    return d;
+    return ret;
 }
- 
-/* driver function */
-int main()
-{
-    long long int n = 10967535067;
-    printf("One of the divisors for %lld is %lld.",
-          n, PollardRho(n));
-    return 0;
+
+bool miller_test(LL n, LL s, LL d, LL a) {
+	LL as = fastexp(a, s, n); //as = a^s mod n
+	if(as == 1 || as == n-1) return true;
+	for(int r = 1; r <= d-1; r++) {
+		as = fastmul(as, as, n); // as = as^2 mod n
+		if (as == 1) return false;
+		if (as == n-1) return true;
+	}
+	return false;
+}
+
+inline bool is_prime(LL n) {
+	if(n == 2) return true;
+    if(n == 1 || (n % 2 == 0)) return false;
+    LL s = n-1, d = 0;
+    while(s % 2 == 0) {
+		d++, s /= 2;
+    }
+	int idx;
+	if (n <= 1000000) idx = 5;
+	else if (n <= 100000000) idx = 7;
+	else idx = 9;
+    for(int j = 0; j < idx; j++) {
+		if (A[j] >= n) break;
+		if (!miller_test(n, s, d, A[j])) 
+			return false;
+    }
+    return true;
+}
+
+
+bool prime[10000000];
+#define MAXP 700000
+int prime_ke[MAXP];
+
+void generate_sieve() {
+	prime[0] = true;
+	prime[1] = true;
+	prime[2] = false;
+	int cnt = 0;
+	for(int i = 2; i < 10000000; i++) {
+		if (!prime[i]) {
+			prime_ke[++cnt] = i;
+			for(int j = i+i; j < 10000000; j += i) {
+				prime[j] = true;
+			}
+		}
+	}
+}
+
+void init() {
+	A.push_back(2);
+	A.push_back(3);
+	A.push_back(5);
+	A.push_back(7);
+	A.push_back(11);
+	A.push_back(13);
+	A.push_back(17);
+	A.push_back(19);
+	A.push_back(23); //9
+	generate_sieve();
+}
+
+void print(vector<LL> &x) {
+	sort(x.begin(), x.end());
+	int size = x.size();
+	for(int i = 0; i < size; i++) {
+		int j;
+		int cnt = 1;
+		for(j = i+1; j < size; j++) {
+			if (x[j] == x[i]) {cnt++;} else break;
+		}
+		if (i) printf(" * ");
+		if (cnt == 1) printf("%lld",x[i]);
+		else printf("%lld^%d",x[i],cnt);
+		i = j-1;
+	}
+	printf("\n");
+}
+
+inline LL g(LL x, LL mod) {
+	if (x >= 1e9) x = fastmul(x, x, mod);
+	else x = (x * x) % mod;
+	x += 1;
+	return x % mod;
+}
+
+void factorize(LL N) {
+	queue<LL> q;
+	vector<LL> result;
+	q.push(N);
+	while(!q.empty()) {
+		LL num = q.front(); q.pop();		
+		if (num < 10000000) {
+			if (!prime[num]) {
+				result.push_back(num);
+				continue;
+			}
+			int sq = sqrt(num);
+			if (!prime[sq] && sq*sq == num) {
+				result.push_back(sq);
+				result.push_back(sq);
+				continue;
+			} 
+			for(int i = 1; i < MAXP; i++) {
+				if (num == 1) break;;
+				if (!prime[num]) {
+					result.push_back(num);
+					break;
+				}
+				while (num % prime_ke[i] == 0) {
+					result.push_back(prime_ke[i]);
+					num /= prime_ke[i];
+				}
+			}
+			continue;
+		}
+		
+		if (is_prime(num)) {
+			result.push_back(num);
+			continue;
+		}
+		LL x = 2, y = 2, d = 1;
+		int step = 0;
+		int cyc_size = 1;
+		int iter = 0;
+		while(d == 1) {
+			step++;
+			x = g(x, num);
+			LL k = x - y;
+			if (k < 0) k = -k;
+			d = __gcd(k, num);
+			if (++iter == cyc_size) y = x, cyc_size <<= 1;
+			// printf("%lld %lld %lld %d %d\n",x, y, d, iter, cyc_size);
+		}
+		q.push(d);
+		q.push(num/d);
+	}
+	
+	printf("%lld = ",N);
+	print(result);
+}
+
+void read() {
+	int tc; scanf("%d",&tc);
+	while (tc--) {
+		LL n;
+		scanf("%lld",&n);
+		factorize(n);
+	}
+}
+
+int main() {
+	init();
+	read();
+	return 0;
 }
