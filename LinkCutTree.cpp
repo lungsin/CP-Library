@@ -1,5 +1,5 @@
 // {{{Link cut tree}}}
-namespace LCT {
+struct LCT {
 	struct Node {
 		int val;
 		int sum;
@@ -101,5 +101,5 @@ namespace LCT {
 		a->p = nullptr;
 		update(b);
 	}
-}
+};
 // }}}
