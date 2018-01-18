@@ -2,7 +2,7 @@
 
 double DEG_to_RAD(double d) { return d * M_PI / 180.0; }
 double RAD_to_DEG(double r) { return r * 180.0 / M_PI; }
-
+double sqr(double a){return a*a;}
 inline int cmp(double a, double b) {
     return (a < b - EPS) ? -1 : ((a > b + EPS) ? 1 : 0);
 }
