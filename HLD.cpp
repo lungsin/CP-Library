@@ -107,29 +107,36 @@ void dfs_hld(int a,int p,int _head){
 }
 
 struct node{//change here
-	ll l,r,ans;
-	ll sum;
+	int l,r,ans;
 	
-	node(){l = r = ans = sum = 0;}
-	node(ll l,ll r,ll ans, ll sum):l(l),r(r),ans(ans),sum(sum){}
+	node(){l = r = ans  = 0;}
+	node(int l,int r,int ans):l(l),r(r),ans(ans){}
 };
 
 node merge(node a,node b){//change here
 	node ret;
-	ret.ans = a.ans + b.ans + a.r*b.l;
-	ret.l = a.l + ((a.l==a.sum)?b.l:0);
-	ret.r = b.r + ((b.r==b.sum)?a.r:0);
-	ret.sum = a.sum + b.sum;
+    if(a.l==0)return b;
+    if(b.l==0)return a;
+	ret.ans = a.ans + b.ans + (a.r==b.l?-1:0);
+	ret.l = a.l;
+	ret.r = b.r;
 	return ret;
 }
 
 struct segtree{
 	node arr[4*maxn];
-	
+	int lazy[4*maxn];
+    
+    void propagate(int a){
+        if(!lazy[a])return;
+        lazy[2*a] = lazy[2*a+1] = lazy[a];
+        arr[a] = node(lazy[a],lazy[a],1);
+        lazy[a] = 0;
+    }
 	void build(int a,int ki,int ka){//change here
 		if(ki==ka){
 			int nd = rev[ki];
-			arr[a] = node(val[nd],val[nd],val[nd],1);
+			arr[a] = node(val[nd],val[nd],1);
 		}
 		else{
 			int mid = (ki+ka)>>1;
@@ -143,8 +150,9 @@ struct segtree{
 		build(1,1,n);
 	}
 	
-	int l,r;
+	int l,r,v;
 	node query(int a,int ki,int ka){
+        propagate(a);
 		if(ka<l || ki>r)return node();
 		if(l<=ki && ka<=r)return arr[a];
 		int mid = (ki+ka)>>1;
@@ -155,6 +163,27 @@ struct segtree{
 		if(l>r)swap(l,r);
 		return query(1,1,n);
 	}
+    
+    void upd(int a,int ki,int ka){
+        propagate(a);
+        if(ka<l || ki>r)return;
+        if(l<=ki && ka<=r){
+            lazy[a] = v;
+            propagate(a);
+            return;
+        }
+        int mid = (ki+ka)>>1;
+        upd(2*a,ki,mid);
+        upd(2*a+1,mid+1,ka);
+        arr[a] = merge(arr[2*a],arr[2*a+1]);
+    }
+    
+    void update(int ki,int ka,int vv){
+        l = ki, r = ka, v = vv;
+        if(l>r)swap(l,r);
+        //puts("haha");
+        upd(1,1,n);
+    }
 }seg;
 
 node query(int a,int b){
@@ -162,11 +191,13 @@ node query(int a,int b){
 	if(ab!=a && ab!=b){
 		int diff = abs(hi[b] - hi[ab]);
 		node l = query(a,ab),r = query(b,up(b,diff - 1));
+        //printf("dbg %d %d :%d - %d %d : %d\n", l.l, l.r, l.ans, r.l, r.r, r.ans);
+        swap(l.l,l.r);
 		return merge(l,r);
 	}
 	else{
 		if(ab==a)swap(a,b);
-		node ret;
+		node ret = node();
 		while(hi[a]>=hi[ab]){
 			int pa = head[a];
 			if(hi[pa]<hi[b])pa = b;
@@ -180,12 +211,58 @@ node query(int a,int b){
 	}
 }
 
+void update(int a,int b,int v){
+    
+	int ab = lca(a,b);
+	if(ab!=a && ab!=b){
+		int diff = abs(hi[b] - hi[ab]);
+		update(a,ab,v),update(b,up(b,diff - 1),v);
+	}
+	else{
+		if(ab==a)swap(a,b);
+		node ret;
+		while(hi[a]>=hi[ab]){
+            
+			int pa = head[a];
+			if(hi[pa]<hi[b])pa = b;
+			seg.update(in[a],in[pa],v);
+			a = par[pa][0];
+		}
+	}
+}
+
 void initHLD(){
+    hit = 0;
     setup_lca();
 	dfs_hld(1,0,1);
 	seg.build();
 }
 
 int main(){
-	
+    int q;
+    while(scanf("%d%d",&n,&q)!=EOF){
+        rep(k,0,n+1)adj[k].clear();
+        rep(k,1,n+1)scanf("%d",&val[k]);
+        
+        rep(k,1,n){
+            int a,b;
+            scanf("%d %d",&a,&b);
+            adj[a].pb(b);
+            adj[b].pb(a);
+        }
+        
+        initHLD();
+        
+        rep(qq,0,q){
+            char tp[3];
+            int a,b,v;
+            scanf("%s %d %d",tp,&a,&b);
+            if(tp[0]=='C'){
+                scanf("%d",&v);
+                update(a,b,v);
+            }
+            else printf("%d\n",query(a,b).ans);
+            
+        }
+    }
 }
