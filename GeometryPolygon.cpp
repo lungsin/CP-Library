@@ -187,23 +187,26 @@ double convex_diameter(Polygon pt) {
 
 // Closest pair
 // Source: e-maxx.ru
-#define upd_ans(x, y) {}
-#define MAXN 100
+#define upd_ans(x, y) {if((x-y).len() < mindist){p1 = x; p2 = y; mindist = (x-y).len();}}
+#define MAXN 100005
+Point p1,p2; // will be the result
 double mindist = 1e20; // will be the result
+int cmpy(Point x,Point y){return x.y<y.y;}
+int cmpx(Point x,Point y){return x.x<y.x;}
 void rec(int l, int r, Point a[]) {
     if(r- l<=3){
         for (int i=l; i<=r; ++i)
             for (int j=i+1; j<=r; ++j)
                 upd_ans(a[i], a[j]);
-        sort(a+l, a+r+1); // compare by y
+        sort(a+l, a+r+1, cmpy); // compare by y
         return;
     }
     
     int m=(l+r)>>1;
-    int midx = a[m].x;
+    double midx = a[m].x;
     rec(l, m, a), rec(m+1, r, a);
     static Point t[MAXN];
-    merge(a+l, a+m+1, a+m+1, a+r+1, t); // compare by y
+    merge(a+l, a+m+1, a+m+1, a+r+1, t, cmpy); // compare by y
     copy(t, t+r-l+1, a+l);
     
     int tsz = 0;
