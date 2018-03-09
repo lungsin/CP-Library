@@ -37,7 +37,7 @@ double signed_area(Polygon p) {
     return area / 2.0;
 }
 double area(const Polygon &p) {
-    return fabs(signed_area(0));
+    return fabs(signed_area(p));
 }
 Point centroid(Polygon p) {
     Point c(0,0);
@@ -153,7 +153,7 @@ Polygon convex_intersect(Polygon P, Polygon Q) {
             else { if (in == Pin) R.push_back(P[a]); a = (a+1)%n; ++aa; }
         }
     } while ( (aa < n || ba < m) && aa < 2*n && ba < 2*m);
-    if (in == Unknow) {
+    if (in == Unknown) {
         if (in_convex(Q, P[0])) return P;
         if (in_convex(P, Q[0])) return Q;
     }

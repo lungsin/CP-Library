@@ -50,3 +50,49 @@ struct SuffixArray{
             else k = 0;
     }
 };
+
+
+const int maxn = 1e5 +5;
+struct perfectHash{
+    int sparse[maxn][20];
+    int rev[maxn];
+
+    ll f(int l, int r){
+        int la = rev[l];
+        int len = r - l + 1;
+        
+        repd(i,19,0){
+            if(sparse[la][i] >= len){
+                la -= (1<<i);
+            }
+        }
+        return (ll) la*maxn + len;
+    }
+    
+    int LCP(int l,int r) {
+        int a = rev[l], b = rev[r];
+        if (a > b) swap(a, b);
+        int ret = INF;
+        repd(i,19,0) {
+            if (b - (1<<i) >= a){
+                ret = min(ret, sparse[b][i]);
+                b -= (1<<i);
+            }
+        }
+        return ret;
+    }
+    
+    void init(string &s){
+        SuffixArray ss (s, 300);
+        rep(k,0,s.size())
+            rev[ss.SA[k]] = k;
+        
+        rep(k,0,s.size())
+            sparse[k][0] = ss.LCP[k];
+            
+        rep(i,1,20)rep(k,0,s.size()){
+            int kk = max(0, k - (1<<(i-1)));
+            sparse[k][i] = min(sparse[k][i-1], sparse[kk][i-1]);
+        }
+    }
+} GG;
