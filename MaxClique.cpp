@@ -6,8 +6,8 @@
 int g[N][N], n;
 
 // MaxClique
-int dp[N], best, ans[N];
-int dfs(int n, int* u, int size, int *clique) {
+int dp[N], best;
+int dfs(int n, int* u, int size, int *clique, int *ans) {
   int i, j, vn, v[N];
   if (n) {
     if (size + dp[u[0]] <= best)
@@ -17,18 +17,19 @@ int dfs(int n, int* u, int size, int *clique) {
         if (g[u[i]][u[j]])
           v[vn++] = u[j];
 	  clique[size] = u[i];
-      if (dfs(vn, v, size + 1, clique))
+      if (dfs(vn, v, size + 1, clique, ans))
         return 1;
     }
   } else if (size > best) {
     best = size;
-	rep(k,0,size) ans[k] = clique[k];
+	  for (int k = 0; k < size; k++)
+      ans[k] = clique[k];
     return 1;
   }
   return 0;
 }
 
-int maxclique() {
+int maxclique(int *ans) {
   int i, j, vn, v[N], arr[N];
   best = 0;
   for (dp[i = n - 1] = 0; i >= 0; --i) {
@@ -36,7 +37,7 @@ int maxclique() {
       if (g[i][j])
         v[vn++] = j;
 	arr[0] = i;
-    dfs(vn, v, 1, arr);
+    dfs(vn, v, 1, arr, ans);
     dp[i] = best;
   }
   
