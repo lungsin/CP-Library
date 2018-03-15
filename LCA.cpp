@@ -57,7 +57,6 @@ void dfs_lca(int a,int p){
     par[a][0] = p;
     hi[a] = hi[p] + 1;
     
-    sz[a] = 1;
     for(auto b : adj[a]) if(b!=p){
         dfs_lca(b,a);
     }
