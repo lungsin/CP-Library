@@ -19,8 +19,8 @@ vector<Edge> g[maxnodes];
 
 // Adds directional edge
 void addEdge(int s, int t, int cap){
-  Edge a = {t, g[t].size(), 0, cap};
-  Edge b = {s, g[s].size(), 0, 0};
+  Edge a = {t, (int) g[t].size(), 0, cap};
+  Edge b = {s, (int) g[s].size(), 0, 0};
   g[s].push_back(a);
   g[t].push_back(b);
 }
