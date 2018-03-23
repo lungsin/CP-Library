@@ -8,7 +8,7 @@ using namespace std;
 const int maxnodes = 5000;
 
 int nodes = maxnodes, src, dest;
-int dist[maxnodes], q[maxnodes], work[maxnodes];
+int _dist[maxnodes], q[maxnodes], work[maxnodes];
 
 struct Edge {
   int to, rev;
@@ -26,8 +26,8 @@ void addEdge(int s, int t, int cap){
 }
 
 bool dinic_bfs() {
-  fill(dist, dist + nodes, -1);
-  dist[src] = 0;
+  fill(_dist, _dist + nodes, -1);
+  _dist[src] = 0;
   int qt = 0;
   q[qt++] = src;
   for (int qh = 0; qh < qt; qh++) {
@@ -35,13 +35,13 @@ bool dinic_bfs() {
     for (int j = 0; j < (int) g[u].size(); j++) {
       Edge &e = g[u][j];
       int v = e.to;
-      if (dist[v] < 0 && e.f < e.cap) {
-        dist[v] = dist[u] + 1;
+      if (_dist[v] < 0 && e.f < e.cap) {
+        _dist[v] = _dist[u] + 1;
         q[qt++] = v;
       }
     }
   }
-  return dist[dest] >= 0;
+  return _dist[dest] >= 0;
 }
 
 int dinic_dfs(int u, int f) {
@@ -51,7 +51,7 @@ int dinic_dfs(int u, int f) {
     Edge &e = g[u][i];
     if (e.cap <= e.f) continue;
     int v = e.to;
-    if (dist[v] == dist[u] + 1) {
+    if (_dist[v] == _dist[u] + 1) {
       int df = dinic_dfs(v, min(f, e.cap - e.f));
       if (df > 0) {
         e.f += df;
