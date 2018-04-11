@@ -38,6 +38,9 @@ struct Point {
     }
 };
 
+// CW  => -1
+// Collinear => 0
+// CCW => 1
 int ccw(Point a, Point b, Point c) {
     return cmp((b-a)%(c-a),0);
 }
@@ -68,6 +71,10 @@ double distToLineSegment(Point p, Point a, Point b, Point &c) {
         return (p - b).len();
     }
     return distToLine(p, a, b, c);
+}
+
+bool onSegment(Point p, Point a, Point b) {
+	return distToLineSegment(p, a, b, p) < EPS;
 }
 
 struct Line {
