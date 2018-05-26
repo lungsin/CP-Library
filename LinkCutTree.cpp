@@ -11,13 +11,14 @@ struct LCT {
 	int getDir(Node *n) { return n->p->c[1] == n; }
 	int getSum(Node *n) { return n ? n->sum : 0; }
 	bool isRoot(Node *n) { return !n->p || n->p->c[getDir(n)] != n; }
-	
+
 	void connect(Node *p, Node *n, int dir) {
 		if (p) p->c[dir] = n;
 		if (n) n->p = p;
 	}
-	
+
 	void push(Node *n) {
+		if (!n) return;
 		if (n->rev) {
 			swap(n->c[0], n->c[1]);
 			if (n->c[0]) n->c[0]->rev ^= true;
@@ -26,12 +27,12 @@ struct LCT {
 			n->sum = getSum(n->c[0]) + getSum(n->c[1]) + n->val;
 		}
 	}
-	
+
 	void update(Node *n) {
 		push(n); push(n->c[0]); push(n->c[1]);
 		n->sum = getSum(n->c[0]) + getSum(n->c[1]) + n->val;
 	}
-	
+
 	void rotate(Node *n) {
 		int dir = getDir(n);
 		Node *p = n->p;
@@ -41,7 +42,7 @@ struct LCT {
 		connect(n, p, !dir);
 		update(p); update(n);
 	}
-	
+
 	Node *splay(Node *n) {
 		while (!isRoot(n)) {
 			Node *p = n->p;
@@ -53,7 +54,7 @@ struct LCT {
 		push(n);
 		return n;
 	}
-	
+
 	Node *access(Node *n) {
 		splay(n);
 		n->c[1] = nullptr; 
@@ -70,13 +71,13 @@ struct LCT {
 		update(n);
 		return last;
 	}
-	
+
 	Node *evert(Node *n) {
 		access(n);
 		n->rev ^= true;
 		return n;
 	}
-	
+
 	Node *getRoot(Node *n) {
 		access(n);
 		while(true) {
@@ -87,12 +88,12 @@ struct LCT {
 		splay(n);
 		return n;
 	}
-	
+
 	void link(Node *a, Node *b) {
 		evert(a);
 		a->p = b;
 	}
-	
+
 	void cut(Node *a, Node *b) { // a is the parent
 		evert(a);
 		access(b);

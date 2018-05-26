@@ -7,7 +7,7 @@ typedef struct node{
     int val;//value stored in the array
     int sum;//whatever info you want to maintain in segtree for each node
     int lazy;//whatever lazy update you want to do
-    struct node *l,*r;
+    struct node *l,*r,*p;
 }node;
 typedef node* pnode;
 
