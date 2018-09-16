@@ -1,5 +1,5 @@
 /**
- * Author: Johan Sannemo, Simon Lindholm
+ * Author: Lung Sin
  * Date: 2016-12-15
  * License: CC0
  * Description: Finds a minimum vertex cover in a bipartite graph.
@@ -9,25 +9,33 @@
  */
 #pragma once
 
-#include "DFSMatching.h"
+#include "hopcroftKarp.h"
 
-vi cover(vector<vi>& g, int n, int m) {
-	int res = dfs_matching(g, n, m);
-	seen.assign(m, false);
-	vector<bool> lfound(n, true);
-	trav(it, match) if (it != -1) lfound[it] = false;
-	vi q, cover;
-	rep(i,0,n) if (lfound[i]) q.push_back(i);
-	while (!q.empty()) {
-		int i = q.back(); q.pop_back();
-		lfound[i] = 1;
-		trav(e, g[i]) if (!seen[e] && match[e] != -1) {
-			seen[e] = true;
-			q.push_back(match[e]);
-		}
-	}
-	rep(i,0,n) if (!lfound[i]) cover.push_back(i);
-	rep(i,0,m) if (seen[i]) cover.push_back(n+i);
-	assert(sz(cover) == res);
-	return cover;
+int flagL[MAXN1], flagR[MAXN2];
+void dfs_mvc(int a) {
+    if (a < 0 || flagL[a]) return;
+    flagL[a] = 1;
+    
+    for (int e = last[a]; e >= 0; e = Prev[e]) {
+        int b = Head[e];
+        flagR[b] = 1;
+        int mb = matching[b];
+        dfs_mvc(mb);
+    }
+}
+
+// L and R are the vertex covered
+int get_mvc(vi &L, vi &R) {
+    int max_matching = maxMatching();
+    fill(flagL, flagL + n1, 1);
+    vector<int> st;
+    for (int k = 0; k < n2; k++) if (matching[k] != -1) flagL[matching[k]] = 0;
+    for (int k = 0; k < n1; k++) if (flagL[k]) st.pb(k);
+    fill(flagL, flagL + n1, 0);
+    fill(flagR, flagR + n2, 0);
+    for (auto a : st) dfs_mvc(a);
+    for (int k = 0; k < n1; k++) if (flagL[k] == 0) L.pb(k);
+    for (int k = 0; k < n2; k++) if (flagR[k] == 1) R.pb(k);
+    
+    return max_matching;
 }
