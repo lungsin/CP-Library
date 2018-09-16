@@ -1,7 +1,7 @@
 /**
- * Author: Simon Lindholm
+ * Author: N/A
  * Date: 2016-07-25
- * Source: https://github.com/ngthanhtrung23/ACM_Notebook_new/blob/master/DataStructure/LinkCut.h
+ * Source:  N/A
  * Description: Represents a forest of unrooted trees. You can add and remove
  * edges (as long as the result is still a forest), and check whether
  * two nodes are in the same tree.
@@ -10,93 +10,108 @@
  */
 #pragma once
 
-struct Node { // Splay tree. Root's pp contains tree's parent.
-	Node *p = 0, *pp = 0, *c[2];
-	bool flip = 0;
-	Node() { c[0] = c[1] = 0; fix(); }
-	void fix() {
-		if (c[0]) c[0]->p = this;
-		if (c[1]) c[1]->p = this;
-		// (+ update sum of subtree elements etc. if wanted)
+struct LCT {
+	struct Node {
+		int val;
+		int sum;
+		bool rev;
+		Node *p, *c[2];
+		Node(int val) : val(val), sum(val), rev(0), p(), c() {}
+	};
+	
+	int getDir(Node *n) { return n->p->c[1] == n; }
+	int getSum(Node *n) { return n ? n->sum : 0; }
+	bool isRoot(Node *n) { return !n->p || n->p->c[getDir(n)] != n; }
+
+	void connect(Node *p, Node *n, int dir) {
+		if (p) p->c[dir] = n;
+		if (n) n->p = p;
 	}
-	void push_flip() {
-		if (!flip) return;
-		flip = 0; swap(c[0], c[1]);
-		if (c[0]) c[0]->flip ^= 1;
-		if (c[1]) c[1]->flip ^= 1;
-	}
-	int up() { return p ? p->c[1] == this : -1; }
-	void rot(int i, int b) {
-		int h = i ^ b;
-		Node *x = c[i], *y = b == 2 ? x : x->c[h], *z = b ? y : x;
-		if ((y->p = p)) p->c[up()] = y;
-		c[i] = z->c[i ^ 1];
-		if (b < 2) {
-			x->c[h] = y->c[h ^ 1];
-			z->c[h ^ 1] = b ? x : this;
-		}
-		y->c[i ^ 1] = b ? this : x;
-		fix(); x->fix(); y->fix();
-		if (p) p->fix();
-		swap(pp, y->pp);
-	}
-	void splay() { /// Splay this up to the root. Always finishes without flip set.
-		for (push_flip(); p; ) {
-			if (p->p) p->p->push_flip();
-			p->push_flip(); push_flip();
-			int c1 = up(), c2 = p->up();
-			if (c2 == -1) p->rot(c1, 2);
-			else p->p->rot(c2, c1 != c2);
+
+	void push(Node *n) {
+		if (!n) return;
+		if (n->rev) {
+			swap(n->c[0], n->c[1]);
+			if (n->c[0]) n->c[0]->rev ^= true;
+			if (n->c[1]) n->c[1]->rev ^= true;
+			n->rev = false;
+			n->sum = getSum(n->c[0]) + getSum(n->c[1]) + n->val;
 		}
 	}
-	Node* first() { /// Return the min element of the subtree rooted at this, splayed to the top.
-		push_flip();
-		return c[0] ? c[0]->first() : (splay(), this);
+
+	void update(Node *n) {
+		push(n); push(n->c[0]); push(n->c[1]);
+		n->sum = getSum(n->c[0]) + getSum(n->c[1]) + n->val;
+	}
+
+	void rotate(Node *n) {
+		int dir = getDir(n);
+		Node *p = n->p;
+		if (isRoot(p)) n->p = p->p;
+		else connect(p->p, n, getDir(p)); 
+		connect(p, n->c[!dir], dir); 
+		connect(n, p, !dir);
+		update(p); update(n);
+	}
+
+	Node *splay(Node *n) {
+		while (!isRoot(n)) {
+			Node *p = n->p;
+			if (!isRoot(p)) push(p->p);
+			push(p);
+			push(n);
+			if (!isRoot(p)) rotate(getDir(n) == getDir(p) ? p : n); rotate(n);
+		}
+		push(n);
+		return n;
+	}
+
+	Node *access(Node *n) {
+		splay(n);
+		n->c[1] = nullptr; 
+		update(n);
+		Node *last = n;
+		while (n->p) {
+			last = n->p;
+			splay(n->p);
+			n->p->c[1] = n;
+			update(n->p);
+			splay(n);
+		}
+		push(n);
+		update(n);
+		return last;
+	}
+
+	Node *evert(Node *n) {
+		access(n);
+		n->rev ^= true;
+		return n;
+	}
+
+	Node *getRoot(Node *n) {
+		access(n);
+		while(true) {
+			push(n);
+			if (n->c[0]) n = n->c[0];
+			else break;
+		}
+		splay(n);
+		return n;
+	}
+
+	void link(Node *a, Node *b) {
+		evert(a);
+		a->p = b;
+	}
+
+	void cut(Node *a, Node *b) { // a is the parent
+		evert(a);
+		access(b);
+		assert(b->c[0] == a);
+		b->c[0] = nullptr;
+		a->p = nullptr;
+		update(b);
 	}
 };
-
-struct LinkCut {
-	vector<Node> node;
-	LinkCut(int N) : node(N) {}
-
-	void link(int u, int v) { // add an edge (u, v)
-		assert(!connected(u, v));
-		make_root(&node[u]);
-		node[u].pp = &node[v];
-	}
-	void cut(int u, int v) { // remove an edge (u, v)
-		Node *x = &node[u], *top = &node[v];
-		make_root(top); x->splay();
-		assert(top == (x->pp ?: x->c[0]));
-		if (x->pp) x->pp = 0;
-		else {
-			x->c[0] = top->p = 0;
-			x->fix();
-		}
-	}
-	bool connected(int u, int v) { // are u, v in the same tree?
-		Node* nu = access(&node[u])->first();
-		return nu == access(&node[v])->first();
-	}
-	void make_root(Node* u) { /// Move u to root of represented tree.
-		access(u);
-		u->splay();
-		if(u->c[0]) {
-			u->c[0]->p = 0;
-			u->c[0]->flip ^= 1;
-			u->c[0]->pp = u;
-			u->c[0] = 0;
-			u->fix();
-		}
-	}
-	Node* access(Node* u) { /// Move u to root aux tree. Return the root of the root aux tree.
-		u->splay();
-		while (Node* pp = u->pp) {
-			pp->splay(); u->pp = 0;
-			if (pp->c[1]) {
-				pp->c[1]->p = 0; pp->c[1]->pp = pp; }
-			pp->c[1] = u; pp->fix(); u = pp;
-		}
-		return u;
-	}
-};
+// }}}
